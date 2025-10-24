@@ -5,6 +5,9 @@ Place raw files locally:
 - data/raw/fashion_products_dataset.json
 - data/raw/validation_labels.csv
 
+### Install the wordcloud library (if needed)
+pip install wordcloud
+
 ### Run preprocessing
 python project_progress/part_1/prepare_part1.py --in data/raw/fashion_products_dataset.json --out data/processed/products_clean.parquet
 # This script performs: 
