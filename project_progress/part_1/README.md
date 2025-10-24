@@ -5,7 +5,7 @@ Place raw files locally:
 - data/raw/fashion_products_dataset.json
 - data/raw/validation_labels.csv
 
-### Import wordcloud (if needed)
+### Install the wordcloud library (if needed)
 -pip install wordcloud
 
 ### Run preprocessing
