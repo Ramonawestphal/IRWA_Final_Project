@@ -1,0 +1,5 @@
+﻿# data (keep folders only)
+data/**
+!data/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
