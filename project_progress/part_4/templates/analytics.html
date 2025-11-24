@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin: 0.5rem 0;
+    }
+    
+    .stat-label {
+        color: #718096;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin: 2rem 0;
+    }
+    
+    .section h2 {
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        background: #f7fafc;
+        border-radius: 8px;
+        transition: background 0.3s;
+    }
+    
+    .list-item:hover {
+        background: #edf2f7;
+    }
+    
+    .query-text {
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    .count-badge {
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .chart-container {
+        margin-top: 1rem;
+        height: 200px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        gap: 5px;
+        border-left: 2px solid #e0e0e0;
+        border-bottom: 2px solid #e0e0e0;
+        padding: 10px;
+    }
+    
+    .bar {
+        flex: 1;
+        background: linear-gradient(to top, #667eea, #764ba2);
+        border-radius: 4px 4px 0 0;
+        position: relative;
+        transition: opacity 0.3s;
+        min-width: 20px;
+    }
+    
+    .bar:hover {
+        opacity: 0.8;
+    }
+    
+    .bar-label {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8rem;
+        color: #718096;
+        white-space: nowrap;
+    }
+    
+    .algorithm-stats {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .algo-badge {
+        padding: 0.75rem 1.5rem;
+        background: #f7fafc;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .algo-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    
+    .algo-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+    
+    .recent-searches {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .search-entry {
+        padding: 1rem;
+        border-left: 3px solid #667eea;
+        background: #f7fafc;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+    }
+    
+    .search-query {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+    
+    .search-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: #718096;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="color: #2d3748; margin-bottom: 1rem;">📊 Analytics Dashboard</h1>
+<p style="color: #718096; margin-bottom: 2rem;">
+    Real-time statistics and insights about search engine usage
+</p>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Searches</div>
+        <div class="stat-value">{{ stats.total_searches }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Unique Queries</div>
+        <div class="stat-value">{{ stats.unique_queries }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Product Views</div>
+        <div class="stat-value">{{ stats.total_product_views }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Avg Query Length</div>
+        <div class="stat-value">{{ stats.avg_query_length }}</div>
+        <div style="color: #718096; font-size: 0.85rem; margin-top: 0.5rem;">words</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Algorithm Usage</h2>
+    <div class="algorithm-stats">
+        {% for algo, count in stats.algorithm_usage.items() %}
+        <div class="algo-badge">
+            <div class="algo-name">{{ algo }}</div>
+            <div class="algo-count">{{ count }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if not stats.algorithm_usage %}
+    <p style="color: #718096; text-align: center; padding: 2rem;">
+        No algorithm usage data yet. Perform some searches to see statistics.
+    </p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Top Search Queries</h2>
+    {% if stats.top_queries %}
+        {% for query, count in stats.top_queries %}
+        <div class="list-item">
+            <span class="query-text">{{ query }}</span>
+            <span class="count-badge">{{ count }} searches</span>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: #718096; text-align: center; padding: 2rem;">
+            No search queries yet. Start searching to see popular queries.
+        </p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Top Viewed Products</h2>
+    {% if stats.top_products %}
+        {% for pid, count in stats.top_products %}
+        <div class="list-item">
+            <span class="query-text">
+                <a href="/product/{{ pid }}" style="color: #667eea; text-decoration: none;">
+                    Product: {{ pid }}
+                </a>
+            </span>
+            <span class="count-badge">{{ count }} views</span>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: #718096; text-align: center; padding: 2rem;">
+            No product views yet. View some products to see statistics.
+        </p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Searches by Hour of Day</h2>
+    {% if stats.searches_per_hour %}
+    <div class="chart-container">
+        {% for hour in range(24) %}
+            {% set count = stats.searches_per_hour.get(hour, 0) %}
+            {% set max_count = stats.searches_per_hour.values()|max if stats.searches_per_hour.values() else 1 %}
+            {% set height = (count / max_count * 100)|round|int if max_count > 0 else 0 %}
+            <div class="bar" style="height: {{ height }}%;" title="{{ hour }}:00 - {{ count }} searches"></div>
+                <div class="bar-label">{{ hour }}h</div>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #718096; text-align: center; padding: 2rem;">
+        No hourly data available yet.
+    </p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Recent Search Activity</h2>
+    <div class="recent-searches">
+        {% if stats.recent_searches %}
+            {% for search in stats.recent_searches %}
+            <div class="search-entry">
+                <div class="search-query">"{{ search.query }}"</div>
+                <div class="search-meta">
+                    <span>🔍 {{ search.algorithm|upper }}</span>
+                    <span>🕐 {{ search.timestamp[:19] }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #718096; text-align: center; padding: 2rem;">
+                No recent searches. Start searching to see activity.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<div style="text-align: center; margin: 2rem 0; padding: 2rem; background: white; border-radius: 12px;">
+    <p style="color: #718096; margin-bottom: 1rem;">
+        Analytics data is stored locally and persists across sessions.
+    </p>
+    <a href="/" style="display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; transition: background 0.3s;">
+        Back to Search
+    </a>
+</div>
+{% endblock %}

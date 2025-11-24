@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - {{ query }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .product-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    
+    .product-image {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        background: #f0f0f0;
+    }
+    
+    .product-info {
+        padding: 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .product-brand {
+        font-size: 0.85rem;
+        color: #718096;
+        margin-bottom: 0.5rem;
+        text-transform: capitalize;
+    }
+    
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-rating {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+        color: #f59e0b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-discount {
+        display: inline-block;
+        background: #10b981;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .view-details {
+        margin-top: auto;
+        padding: 10px;
+        background: #667eea;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: background 0.3s;
+    }
+    
+    .view-details:hover {
+        background: #5568d3;
+    }
+    
+    .summary-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+        margin: 2rem 0;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 2rem;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #667eea;
+    }
+    
+    .pagination .current {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-box">
+    <form action="/search" method="post" class="search-form">
+        <input 
+            type="text" 
+            name="query" 
+            value="{{ query }}" 
+            placeholder="Search for products" 
+            required
+        >
+        <button type="submit">Search</button>
+    </form>
+    
+    <div class="algorithm-select">
+        <p style="font-weight: 600; margin-right: 10px;">Algorithm:</p>
+        <label>
+            <input type="radio" name="algorithm" value="custom" {% if algorithm == 'custom' %}checked{% endif %}>
+            <span>Custom</span>
+        </label>
+        <label>
+            <input type="radio" name="algorithm" value="tfidf" {% if algorithm == 'tfidf' %}checked{% endif %}>
+            <span>TF-IDF</span>
+        </label>
+        <label>
+            <input type="radio" name="algorithm" value="bm25" {% if algorithm == 'bm25' %}checked{% endif %}>
+            <span>BM25</span>
+        </label>
+        <label>
+            <input type="radio" name="algorithm" value="semantic" {% if algorithm == 'semantic' %}checked{% endif %}>
+            <span>Semantic</span>
+        </label>
+    </div>
+</div>
+
+{% if query %}
+    <div style="margin: 1rem 0;">
+        <h2 style="color: #2d3748;">
+            Search Results for: "{{ query }}"
+            <span class="badge">{{ total }} results</span>
+            <span class="badge" style="background: #10b981;">{{ algorithm|upper }}</span>
+        </h2>
+    </div>
+    
+    {% if summary %}
+    <div class="summary-box">
+        <h3 style="margin-bottom: 0.5rem; color: #667eea;">
+            🤖 AI Summary
+        </h3>
+        <p style="color: #2d3748; line-height: 1.6;">{{ summary }}</p>
+    </div>
+    {% endif %}
+    
+    {% if results %}
+        <div class="product-grid">
+            {% for product in results %}
+            <div class="product-card">
+                {% if product.images and product.images|length > 0 %}
+                    <img src="{{ product.images[0] }}" alt="{{ product.title }}" class="product-image" onerror="this.src='https://via.placeholder.com/280x280?text=No+Image'">
+                {% else %}
+                    <img src="https://via.placeholder.com/280x280?text=No+Image" alt="{{ product.title }}" class="product-image">
+                {% endif %}
+                
+                <div class="product-info">
+                    <div class="product-title">{{ product.title }}</div>
+                    <div class="product-brand">{{ product.brand }}</div>
+                    
+                    {% if product.average_rating %}
+                    <div class="product-rating">
+                        ⭐ {{ product.average_rating }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="product-price">₹{{ product.selling_price }}</div>
+                    
+                    {% if product.discount %}
+                    <div class="product-discount">{{ product.discount }}</div>
+                    {% endif %}
+                    
+                    <a href="/product/{{ product.pid }}" class="view-details">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if total > per_page %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="/search?q={{ query }}&algorithm={{ algorithm }}&page={{ page - 1 }}">← Previous</a>
+            {% endif %}
+            
+            <span class="current">Page {{ page }} of {{ (total / per_page)|round(0, 'ceil')|int }}</span>
+            
+            {% if page * per_page < total %}
+                <a href="/search?q={{ query }}&algorithm={{ algorithm }}&page={{ page + 1 }}">Next →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="alert">
+            <p>No results found for "{{ query }}". Try different keywords or check your spelling.</p>
+        </div>
+    {% endif %}
+{% endif %}
+
+<script>
+    document.querySelectorAll('input[name="algorithm"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            window.location.href = `/search?q={{ query }}&algorithm=${this.value}`;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Fashion Search - Home{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 3rem 0;">
+    <h2 style="font-size: 2.5rem; margin-bottom: 1rem; color: #2d3748;">
+        Find Your Perfect Fashion Item
+    </h2>
+    <p style="font-size: 1.1rem; color: #718096; margin-bottom: 2rem;">
+        Search through thousands of fashion products with AI-powered algorithms
+    </p>
+</div>
+
+<div class="search-box" style="max-width: 800px; margin: 0 auto;">
+    <form action="/search" method="post" class="search-form">
+        <input 
+            type="text" 
+            name="query" 
+            placeholder="Search for products (e.g., 'women full sleeve sweatshirt cotton')" 
+            required
+            autofocus
+        >
+        <button type="submit">Search</button>
+    </form>
+    
+    <div class="algorithm-select">
+        <p style="font-weight: 600; margin-right: 10px;">Algorithm:</p>
+        <label>
+            <input type="radio" name="algorithm" value="custom" checked>
+            <span>Custom (Recommended)</span>
+        </label>
+        <label>
+            <input type="radio" name="algorithm" value="tfidf">
+            <span>TF-IDF</span>
+        </label>
+        <label>
+            <input type="radio" name="algorithm" value="bm25">
+            <span>BM25</span>
+        </label>
+        <label>
+            <input type="radio" name="algorithm" value="semantic">
+            <span>Semantic</span>
+        </label>
+    </div>
+</div>
+
+<div style="max-width: 800px; margin: 3rem auto;">
+    <h3 style="margin-bottom: 1rem; color: #2d3748;">Try these example searches:</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div class="example-search" style="padding: 1rem; background: white; border-radius: 8px; cursor: pointer; transition: transform 0.2s;" onclick="searchExample('women full sleeve sweatshirt cotton')">
+            <strong>Women's Sweatshirts</strong>
+            <p style="color: #718096; font-size: 0.9rem;">Cotton full sleeve</p>
+        </div>
+        <div class="example-search" style="padding: 1rem; background: white; border-radius: 8px; cursor: pointer; transition: transform 0.2s;" onclick="searchExample('men slim jeans blue')">
+            <strong>Men's Jeans</strong>
+            <p style="color: #718096; font-size: 0.9rem;">Slim fit blue jeans</p>
+        </div>
+        <div class="example-search" style="padding: 1rem; background: white; border-radius: 8px; cursor: pointer; transition: transform 0.2s;" onclick="searchExample('long sleeve denim jacket')">
+            <strong>Denim Jackets</strong>
+            <p style="color: #718096; font-size: 0.9rem;">Long sleeve style</p>
+        </div>
+    </div>
+</div>
+
+<div style="max-width: 800px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 12px;">
+    <h3 style="margin-bottom: 1rem; color: #2d3748;">About the Search Algorithms</h3>
+    <div style="display: grid; gap: 1rem;">
+        <div>
+            <strong>Custom Algorithm</strong>
+            <p style="color: #718096; font-size: 0.9rem;">
+                Combines TF-IDF with product features (price, rating, brand popularity) for optimal results
+            </p>
+        </div>
+        <div>
+            <strong>TF-IDF</strong>
+            <p style="color: #718096; font-size: 0.9rem;">
+                Classic text-based ranking using term frequency and inverse document frequency
+            </p>
+        </div>
+        <div>
+            <strong>BM25</strong>
+            <p style="color: #718096; font-size: 0.9rem;">
+                Probabilistic ranking function that considers document length normalization
+            </p>
+        </div>
+        <div>
+            <strong>Semantic Search</strong>
+            <p style="color: #718096; font-size: 0.9rem;">
+                AI-powered semantic understanding using sentence embeddings
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function searchExample(query) {
+        document.querySelector('input[name="query"]').value = query;
+        document.querySelector('.search-form').submit();
+    }
+    
+    // Handle algorithm selection
+    document.querySelectorAll('input[name="algorithm"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const form = document.querySelector('.search-form');
+            const url = new URL(form.action, window.location.origin);
+            url.searchParams.set('algorithm', this.value);
+            form.action = url.pathname + url.search;
+        });
+    });
+    
+    // Add hover effect
+    document.querySelectorAll('.example-search').forEach(el => {
+        el.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        });
+        el.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+</script>
+{% endblock %}
