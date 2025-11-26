@@ -23,30 +23,34 @@ class SearchEngine:
         
     def load_data(self):
         """Load and preprocess data"""
-        # Load JSON dataset
-        with open(self.data_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
-        self.df = pd.DataFrame(data)
-        
-        # Create combined text for search (title + description)
-        self.df['title_tokens'] = self.df['title'].fillna('') + ' ' + self.df['description'].fillna('')
+        if self.data_path.endswith(".json"):
+            with open(self.data_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self.df = pd.DataFrame(data)
+        elif self.data_path.endswith(".parquet"):
+            self.df = pd.read_parquet(self.data_path)
+        else:
+            raise ValueError("Unsupported file type")
+
+        # Combine text for search
+        self.df['title_tokens'] = self.df['title_raw'].fillna('') + ' ' + self.df['description_raw'].fillna('')
         self.df['tokens'] = self.df['title_tokens'].apply(self.tokenize)
         self.df['len'] = self.df['tokens'].apply(len)
-        
+
         # Stats for BM25
         self.N = len(self.df)
         self.df_counts = Counter(t for tokens in self.df['tokens'] for t in set(tokens))
         self.avgdl = self.df['len'].mean()
-        
+
         # Build TF-IDF vectors
         self._build_tfidf_vectors()
-        
-        # Build Sentence Transformer embeddings
+
+        # Build sentence embeddings
         print("Building sentence embeddings...")
         self._build_sentence_embeddings()
-        
+
         print(f"Search engine ready with {self.N} products")
+
     
     def tokenize(self, text):
         """Tokenize text"""
@@ -73,7 +77,7 @@ class SearchEngine:
         """Build sentence embeddings using Sentence Transformers"""
         try:
             model = SentenceTransformer('all-MiniLM-L6-v2')
-            titles = self.df['title'].fillna('').tolist()
+            titles = self.df['title_raw'].fillna('').tolist()
             pids = self.df['pid'].tolist()
             
             emb_matrix = model.encode(titles, show_progress_bar=True)
@@ -227,7 +231,15 @@ class SearchEngine:
             product['score'] = float(score)
             enriched.append(product)
         
-        return enriched
+        if algorithm == "hybrid":
+            enriched = self.rerank_results(query, enriched)
+
+        # Detect weak results
+        if len(results) == 0 or all(score < 0.05 for _, score in results):
+            return {"no_good_products": True, "results": []}
+
+        return {"no_good_products": False, "results": enriched}
+
     
     def get_product_by_pid(self, pid):
         """Get product details by PID"""
@@ -252,26 +264,29 @@ class SearchEngine:
     
     def generate_summary(self, query, results):
         """Generate RAG summary using Claude API"""
-        if not results:
-            return None
-        
-        # Prepare context from top results
+        if not results or results.get("no_good_products", False):
+            return "Keine passenden Produkte gefunden."
+
+        results = results["results"]
         context = []
         for i, product in enumerate(results[:5], 1):
-            context.append(f"{i}. {product['title']} - {product['brand']}")
+            context.append(
+                f"{i}. {product['title_raw']}   ({product['brand']}, {product.get('selling_price', 'N/A')}€, "
+                f"rating {product.get('average_rating', 'N/A')})"
+            )
             if product.get('description'):
                 desc = product['description'][:200]
                 context.append(f"   {desc}...")
-        
+
         context_text = "\n".join(context)
-        
+
         prompt = f"""Based on the search results for the query "{query}", provide a brief summary (2-3 sentences) of the products found. Focus on common themes, price ranges, and notable brands.
 
-Search Results:
-{context_text}
+    Search Results:
+    {context_text}
 
-Summary:"""
-        
+    Summary:"""
+
         try:
             import requests
             response = requests.post(
@@ -284,7 +299,7 @@ Summary:"""
                 },
                 timeout=10
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 summary = data['content'][0]['text']
@@ -294,3 +309,24 @@ Summary:"""
         except Exception as e:
             print(f"Error generating summary: {e}")
             return None
+
+    def rerank_results(self, query, results, alpha=0.7):
+        """Blend lexical (custom) and semantic similarity for improved ranking."""
+        try:
+            model = SentenceTransformer('all-MiniLM-L6-v2')
+            q_emb = model.encode([query])[0]
+        except:
+            return results  # fallback
+
+        for product in results:
+            pid = product['pid']
+            if pid in self.doc_sent_embeddings:
+                sem = self.cosine_sim_dense(q_emb, self.doc_sent_embeddings[pid])
+            else:
+                sem = 0
+
+            # Blend old score + semantic similarity
+            product['score'] = alpha * product['score'] + (1 - alpha) * sem
+
+        return sorted(results, key=lambda x: x['score'], reverse=True)
+

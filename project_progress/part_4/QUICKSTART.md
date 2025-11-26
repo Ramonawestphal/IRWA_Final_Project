@@ -1,12 +1,12 @@
 # 🚀 Quick Start Guide - Fashion Search Engine
 
-## Paso 1: Preparar el Entorno
+## Step 1: Set Up the Environment
 
-### 1.1 Estructura de Carpetas
-Crea la siguiente estructura de carpetas:
+### 1.1 Folder Structure
+Create this directory layout:
 
 ```
-tu_proyecto/
+your_project/
 ├── app.py
 ├── search_engine.py
 ├── analytics.py
@@ -15,7 +15,7 @@ tu_proyecto/
 ├── convert_parquet_to_json.py
 ├── test_search.py
 ├── data/
-│   └── (aquí irá fashion_products_dataset.json)
+│   └── (fashion_products_dataset.json will be here)
 └── templates/
     ├── base.html
     ├── index.html
@@ -25,45 +25,40 @@ tu_proyecto/
     └── error.html
 ```
 
-### 1.2 Instalar Dependencias
+### 1.2 Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Esto instalará:
-- Flask (web framework)
-- pandas (data manipulation)
-- numpy (numerical operations)
-- scikit-learn (TF-IDF vectorization)
-- sentence-transformers (semantic search)
-- requests (HTTP requests for RAG)
-- pyarrow (Parquet file support)
+Installs:
 
-## Paso 2: Preparar los Datos
+-Flask (web framework
+-pandas (data handling)
+-numpy (numerical tools)
+-scikit-learn (TF-IDF vectorizer)
+-sentence-transformers (semantic embeddings)
+-requests (RAG requests)
+-pyarrow (reading Parquet files)
 
-### Opción A: Si tienes `fashion_products_dataset.json`
-Simplemente colócalo en la carpeta `data/`:
+## Step 2: Prepare the Data
+
+### Option A: You have `fashion_products_dataset.json`
+Place it in:
 ```
 data/fashion_products_dataset.json
 ```
 
-### Opción B: Si tienes `products_clean.parquet`
-1. Coloca el archivo Parquet en `data/processed/`:
+### Option B: You already have `products_clean.parquet`
+1. Put the file here:
 ```
 data/processed/products_clean.parquet
 ```
 
-2. Ejecuta el script de conversión:
-```bash
-python convert_parquet_to_json.py
-```
 
-Esto creará automáticamente `data/fashion_products_dataset.json`
+### VVerify JSON format
 
-### Verificar el archivo JSON
-
-El archivo debe tener esta estructura:
+Expected structure:
 ```json
 [
   {
@@ -87,34 +82,28 @@ El archivo debe tener esta estructura:
 ]
 ```
 
-## Paso 3: Verificar la Instalación
+## Step 3: Verify Installation
 
-Ejecuta el script de prueba:
+Run:
 
 ```bash
 python test_search.py
 ```
 
-Deberías ver:
-```
-✓ All required packages installed
-✓ Found: data/fashion_products_dataset.json
-✓ Contains 28099 products
-✓ Loaded 28099 products
-✓ TFIDF: Found 5 results
-✓ BM25: Found 5 results
-✓ CUSTOM: Found 5 results
-✓ SEMANTIC: Found 5 results
-✅ Everything is ready! Start the app with: python app.py
-```
+You should see checks for:
 
-## Paso 4: Iniciar la Aplicación
+-Installed packages
+-JSON file presence
+-Number of products
+-All algorithms (TF-IDF, BM25, Custom, Semantic) returning results
+
+## Step 4: Start the Application
 
 ```bash
 python app.py
 ```
 
-Verás:
+Startup message includes:
 ```
 Loading search engine...
 Building sentence embeddings...
@@ -125,82 +114,78 @@ Starting Flask server...
  * Running on http://0.0.0.0:5000
 ```
 
-**Nota**: La primera vez tardará 1-2 minutos en cargar los embeddings semánticos. Las siguientes veces serán más rápidas.
+## Step 5: Use the Application
 
-## Paso 5: Usar la Aplicación
-
-### 5.1 Página Principal
-Abre tu navegador en: **http://localhost:5000**
+### 5.1 Home Page
+AVisit: **http://localhost:5000**
 
 Verás:
-- Caja de búsqueda central
-- Selector de algoritmos
-- Ejemplos de búsquedas
-- Información sobre los algoritmos
+You get a search bar, algorithm selector, and examples
 
-### 5.2 Realizar una Búsqueda
+### 5.2 Run a Search
 
-1. **Escribe una consulta**, por ejemplo:
+1. **Enter queries** like:
    - "women full sleeve sweatshirt cotton"
    - "men slim jeans blue"
    - "denim jacket"
 
-2. **Selecciona un algoritmo**:
-   - **Custom** (recomendado): Combina TF-IDF con features de producto
-   - **TF-IDF**: Ranking basado en texto clásico
-   - **BM25**: Ranking probabilístico
-   - **Semantic**: Búsqueda semántica con IA
+2. **Choose algorithm**:
+   - **Custom** (default): Combines TF-IDF with product features
+   - **TF-IDF**
+   - **BM25**
+   - **Semantic**
 
-3. **Haz clic en "Search"**
+3. **Clock on "Search"**
 
-### 5.3 Ver Resultados
+### 5.3 Results Page
 
-La página de resultados muestra:
-- **Resumen con IA** (arriba): Resumen generado automáticamente
-- **Grid de productos**: Imagen, título, marca, precio, rating
-- **Paginación**: 20 productos por página
-- **Botón "View Details"**: Ver información completa del producto
+Shows:
 
-### 5.4 Detalles del Producto
+-AI summary (via RAG)
+-Product grid
+-Pagination
+-“View Details” button
 
-Al hacer clic en un producto verás:
-- Imágenes del producto (con thumbnails)
-- Precio, descuento, rating
-- Descripción completa
-- Especificaciones técnicas
-- Productos similares
-- Enlace al sitio original
+### 5.4 Product Details Page
+
+Shows:
+
+-Images
+-Prices, ratings
+-Description
+-Technical details
+-Similar products
 
 ### 5.5 Analytics Dashboard
 
-Visita: **http://localhost:5000/analytics**
+Visit: **http://localhost:5000/analytics**
 
-Verás estadísticas en tiempo real:
-- Total de búsquedas y queries únicos
-- Visualizaciones de productos
-- Uso de algoritmos
-- Top queries y productos
-- Distribución de búsquedas por hora
-- Actividad reciente
+Shows:
 
-## Paso 6: API REST (Opcional)
+-Search counts
+-Algorithm usage
+-Top queries
+-Product views
+-Time distributions
 
-### Búsqueda básica
+## Paso 6: REST API (Optional)
+
+### Basic search
 ```bash
 curl "http://localhost:5000/api/search?q=blue+jeans"
 ```
 
-### Con algoritmo específico
+### Specify algorithm
 ```bash
 curl "http://localhost:5000/api/search?q=blue+jeans&algorithm=bm25"
 ```
 
-### Limitar resultados
+### Limit result count
 ```bash
 curl "http://localhost:5000/api/search?q=blue+jeans&top_k=10"
 ```
 
-### Respuesta JSON
+### Example JSON response:
 ```json
 {
   "query": "blue jeans",
@@ -222,74 +207,65 @@ curl "http://localhost:5000/api/search?q=blue+jeans&top_k=10"
 
 ## Troubleshooting
 
-### ❌ Error: "Module 'flask' not found"
-```bash
-pip install -r requirements.txt
-```
+Common issues:
 
-### ❌ Error: "Data file not found"
-Verifica que el archivo esté en: `data/fashion_products_dataset.json`
+- Missing Flask: reinstall requirements
 
-```bash
-ls -la data/
-```
+-Missing data file: place JSON in data/
 
-### ❌ Error: "Cannot import name 'SearchEngine'"
-Asegúrate de que todos los archivos Python están en la carpeta raíz del proyecto.
+-Import errors: wrong file locations
 
-### ❌ La carga es muy lenta
-La primera carga tarda 1-2 minutos construyendo embeddings. Esto es normal.
+-Slow loading: normal on first embedding build
 
-### ❌ Los resúmenes RAG no funcionan
-El RAG usa una API gratuita que puede tener limitaciones. La búsqueda sigue funcionando sin resúmenes.
+-RAG issues: external API limits
 
-### ❌ Error de memoria (MemoryError)
-Si tienes < 2GB RAM disponible:
-1. Reduce el dataset
-2. O desactiva semantic search en `config.py`
+-Memory errors: disable semantic search or reduce dataset
 
-## Personalización
+## Customization
 
-### Cambiar pesos del algoritmo Custom
+### Custom algorithm weights
 
-Edita `search_engine.py`, línea ~235:
+In `search_engine.py`, line ~235:
 
 ```python
 final_score = (
     tfidf_score +
-    0.5 * title_boost +      # Peso del título
-    0.3 * price_score +      # Peso del precio
-    0.3 * rating_score +     # Peso del rating
-    0.2 * brand_score        # Peso de la marca
+    0.5 * title_boost +      
+    0.3 * price_score +      
+    0.3 * rating_score +     
+    0.2 * brand_score        
 )
 ```
 
-### Cambiar resultados por página
+### Result count per page
 
-Edita `app.py`, línea 23:
+In `app.py`, line 23:
 
 ```python
-per_page = 20  # Cambia a 10, 30, 50, etc.
+per_page = 20  
 ```
 
-### Modificar colores y diseño
+### Style / UI
 
-Edita los archivos en `templates/`. Todo el CSS está incluido en los templates.
+Modify HTML templates
 
-## Queries de Prueba Recomendadas
+## Recommended Test Queries
 
-Prueba estos queries para verificar que todo funciona:
+women full sleeve sweatshirt cotton
 
-1. `women full sleeve sweatshirt cotton` - Búsqueda específica
-2. `men slim jeans blue` - Filtro por género y color
-3. `denim jacket` - Búsqueda general
-4. `cotton shirt man regular fit` - Múltiples atributos
-5. `brand blend fabric` - Búsqueda por material
-6. `high rating discount` - Búsqueda por características
+men slim jeans blue
 
-## Estructura de Datos Analíticos
+denim jacket
 
-Los datos se guardan en `analytics_log.json`:
+cotton shirt man regular fit
+
+brand blend fabric
+
+high rating discount
+
+## Analytics Data Structure
+
+`analytics_log.json` looks like:
 
 ```json
 {
@@ -311,38 +287,18 @@ Los datos se guardan en `analytics_log.json`:
 }
 ```
 
-## Siguiente Paso: Evaluación
+## Next Steps: Evaluation
 
-Para evaluar tu motor de búsqueda:
+To evaluate:
 
-1. Usa las 7 queries de validación del proyecto
-2. Compara resultados entre algoritmos
-3. Revisa el analytics dashboard para ver cuál es más usado
-4. Documenta los mejores resultados para tu informe
+1. Use the seven validation queries
+2. Compare algorithms
+3. Inspect analytics
+4. Document findings
 
-## Recursos Adicionales
+## Additional Resources
 
-- **Logs de la aplicación**: Se muestran en la consola
-- **Datos analíticos**: `analytics_log.json`
-- **Configuración**: `config.py`
-- **Documentación API**: README.md
-
-## Contacto y Soporte
-
-Si tienes problemas:
-1. Revisa los mensajes de error en la consola
-2. Ejecuta `python test_search.py` para diagnóstico
-3. Verifica que todos los archivos están en su lugar
-4. Comprueba que las dependencias están instaladas
-
----
-
-**¡Listo! 🎉** Tu motor de búsqueda está funcionando con:
-- ✅ 4 algoritmos de ranking
-- ✅ Interfaz web completa
-- ✅ RAG con resúmenes IA
-- ✅ Analytics en tiempo real
-- ✅ API REST
-- ✅ 28,000+ productos fashion
-
-**Disfruta buscando! 🛍️**
+- Logs (console)
+- Analytics (analytics_log.json)
+- Configuration (config.py)
+- API docs (README.md)
