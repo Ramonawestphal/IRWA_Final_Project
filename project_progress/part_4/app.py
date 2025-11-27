@@ -12,7 +12,6 @@ from config import get_config
 import pandas as pd
 
 df = pd.read_parquet(r"C:\Users\Ramona\.vscode\IR_Project\IRWA_Final_Project\data\processed\products_clean.parquet")
-print(df.columns)
 
 cfg = get_config()
 
@@ -22,6 +21,7 @@ app.config.update(DEBUG=cfg["flask"]["DEBUG"], SECRET_KEY=cfg["flask"]["SECRET_K
 # Initialize
 data_path = r"C:\Users\Ramona\.vscode\IR_Project\IRWA_Final_Project\data\processed\products_clean.parquet"
 search_engine = SearchEngine(data_path=str(data_path))
+search_engine.load_data()
 analytics = Analytics(log_file=str(cfg["analytics_log"]))
 
 # Helper: session id cookie
@@ -35,46 +35,24 @@ def get_or_create_session():
 def index():
     return render_template("index.html", site_name=cfg["ui"]["site_name"])
 
-@app.route("/search", methods=["GET", "POST"])
+@app.route("/search", methods=["POST"])
 def search():
-    if request.method == "POST":
-        query = request.form.get("query", "").strip()
-        algorithm = request.form.get("algorithm", cfg["search"]["default_algorithm"])
-    else:
-        query = request.args.get("q", "").strip()
-        algorithm = request.args.get("algorithm", cfg["search"]["default_algorithm"])
-
-    page = int(request.args.get("page", 1))
-    per_page = cfg["pagination"]["per_page"]
-    session_id = get_or_create_session()
-
-    if not query:
-        return render_template("results.html", query="", results=[], algorithm=algorithm, total=0, page=page, per_page=per_page)
-
-    # Perform search
-    results = search_engine.search(query, algorithm=algorithm, top_k=cfg["pagination"]["max_results"], session_id=session_id)
-
-    # Log the search
-    analytics.log_search(query=query, algorithm=algorithm, session_id=session_id, results_count=len(results))
-
+    q = request.form.get("query", "").strip()  # form data instead of args
+    alg = request.form.get("algorithm", cfg["search"]["default_algorithm"])
+    top_k = int(cfg["pagination"]["per_page"])
+    
+    results_dict = search_engine.search(q, algorithm=alg, top_k=top_k)
+    results_list = results_dict["results"]
+    
     # Pagination
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated = results[start:end]
+    paginated = results_list[:top_k]
+    
+    # Logging
+    session_id = get_or_create_session()
+    analytics.log_search(query=q, algorithm=alg, session_id=session_id, results_count=len(results_list))
+    
+    return render_template("results.html", query=q, results=paginated, algorithm=alg)
 
-    # Generate RAG summary for top-K of first page (configurable)
-    summary = None
-    if cfg["rag"]["enabled"] and page == 1 and results:
-        summary = search_engine.generate_summary(query, results[: cfg["rag"]["max_products_for_summary"]])
-
-    resp = render_template("results.html", query=query, results=paginated, summary=summary,
-                           algorithm=algorithm, total=len(results), page=page, per_page=per_page)
-
-    # set session cookie if not present
-    flask_resp = app.make_response(resp)
-    if not request.cookies.get("session_id"):
-        flask_resp.set_cookie("session_id", session_id, httponly=True)
-    return flask_resp
 
 @app.route("/product/<pid>")
 def product_detail(pid):
@@ -129,9 +107,61 @@ def api_search():
     if not q:
         return jsonify({"error": "q parameter required"}), 400
     session_id = get_or_create_session()
-    results = search_engine.search(q, algorithm=alg, top_k=top_k, session_id=session_id)
-    analytics.log_search(query=q, algorithm=alg, session_id=session_id, results_count=len(results))
-    return jsonify({"query": q, "algorithm": alg, "total": len(results), "results": results})
+
+    global search_engine
+    results_dict = search_engine.search(q, algorithm=alg, top_k=top_k)  # call the search
+    results_list = results_dict["results"]  # extract the list of results
+
+    # Pagination
+    start = 0  
+    end = top_k
+    paginated = results_list[start:end]
+
+    # Logging 
+    session_id = get_or_create_session()
+    analytics.log_search(query=q, algorithm=alg, session_id=session_id, results_count=len(results_list))
+
+    # Return paginated results
+    return jsonify({
+        "query": q,
+        "algorithm": alg,
+        "total": len(results_list),
+        "results": paginated
+    })
+
+@app.route("/search")
+def search_page():
+    q = request.args.get("q", "").strip()
+    alg = request.args.get("algorithm", cfg["search"]["default_algorithm"])
+    top_k = int(request.args.get("top_k", cfg["pagination"]["per_page"]))
+
+    if not q:
+        return render_template("results.html", query=q, results=[], total=0, algorithm=alg)
+
+    # Use global search engine
+    global search_engine
+    results_dict = search_engine.search(q, algorithm=alg, top_k=top_k)
+    results_list = results_dict["results"]
+
+    # Pagination
+    start = 0
+    end = top_k
+    paginated = results_list[start:end]
+
+    # Logging
+    session_id = get_or_create_session()
+    analytics.log_search(query=q, algorithm=alg, session_id=session_id, results_count=len(results_list))
+
+    print("Search route called with query:", q)
+
+    return render_template(
+        "results.html",
+        query=q,
+        results=paginated,
+        total=len(results_list),
+        algorithm=alg
+    )
+
 
 @app.errorhandler(404)
 def not_found(e):

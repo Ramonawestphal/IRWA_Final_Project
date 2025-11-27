@@ -238,6 +238,7 @@ class SearchEngine:
         if len(results) == 0 or all(score < 0.05 for _, score in results):
             return {"no_good_products": True, "results": []}
 
+
         return {"no_good_products": False, "results": enriched}
 
     
