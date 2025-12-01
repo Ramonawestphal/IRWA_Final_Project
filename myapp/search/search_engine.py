@@ -1,36 +1,56 @@
-import random
-import numpy as np
-
-from myapp.search.objects import Document
-
-
-def dummy_search(corpus: dict, search_id, num_results=20):
-    """
-    Just a demo method, that returns random <num_results> documents from the corpus
-    :param corpus: the documents corpus
-    :param search_id: the search id
-    :param num_results: number of documents to return
-    :return: a list of random documents from the corpus
-    """
-    res = []
-    doc_ids = list(corpus.keys())
-    docs_to_return = np.random.choice(doc_ids, size=num_results, replace=False)
-    for doc_id in docs_to_return:
-        doc = corpus[doc_id]
-        res.append(Document(pid=doc.pid, title=doc.title, description=doc.description,
-                            url="doc_details?pid={}&search_id={}&param2=2".format(doc.pid, search_id), ranking=random.random()))
-    return res
+from myapp.search.objects import Document, ResultItem
+from myapp.search.algorithms import search_in_corpus
+from typing import List, Dict
 
 
 class SearchEngine:
     """Class that implements the search engine logic"""
 
-    def search(self, search_query, search_id, corpus):
-        print("Search query:", search_query)
+    def __init__(self, corpus: Dict[str, Document]):
+        """
+        Initialize search engine with corpus.
+        
+        Args:
+            corpus: Dictionary of Document objects (key: pid, value: Document)
+        """
+        self.corpus = corpus
 
-        results = []
-        ### You should implement your search logic here:
-        results = dummy_search(corpus, search_id)  # replace with call to search algorithm
+    def search(self, search_query: str, search_id: str, algorithm: str = "tfidf", top_k: int = 20) -> List[ResultItem]:
+        """
+        Main search function.
+        
+        Args:
+            search_query: The search query string
+            search_id: Unique identifier for this search
+            algorithm: "tfidf" or "bm25" (default: "tfidf")
+            top_k: Number of results to return (default: 20)
+            
+        Returns:
+            List of ResultItem objects with ranking
+        """
+        print(f"Search query: {search_query} | Algorithm: {algorithm}")
 
-        # results = search_in_corpus(search_query)
+        if not search_query or not search_query.strip():
+            return []
+
+        # Call the search algorithm
+        results = search_in_corpus(search_query, self.corpus, algorithm=algorithm, top_k=top_k)
+        
+        # Add search_id to URLs for tracking
+        for result in results:
+            if result.url:
+                result.url = f"doc_details?pid={result.pid}&search_id={search_id}"
+        
         return results
+    
+    def get_document(self, pid: str) -> Document:
+        """
+        Get a document by its PID.
+        
+        Args:
+            pid: Product ID
+            
+        Returns:
+            Document object or None if not found
+        """
+        return self.corpus.get(pid, None)
