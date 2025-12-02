@@ -57,11 +57,11 @@ def before_request():
     """Track all requests for analytics."""
     user_agent = request.headers.get('User-Agent', '')
     user_ip = request.remote_addr
-    
+
     # Create session ID if not exists
     if 'session_id' not in session:
         session['session_id'] = os.urandom(16).hex()
-    
+
     # Track request
     analytics_data.track_request(
         session_id=session['session_id'],
@@ -71,6 +71,10 @@ def before_request():
         ip_address=user_ip,
         timestamp=datetime.now()
     )
+
+    # Optional: only access form data for POST requests to /search
+    if request.method == "POST" and request.path == "/search":
+        search_query = request.form.get('search_query', '').strip()
 
 
 # Home URL "/"
@@ -91,6 +95,20 @@ def index():
     print(session)
     return render_template('index.html', page_title="Welcome")
 
+def parse_description(desc):
+    """Parse description into list of (field, value) tuples."""
+    fields = ['Brand name', 'Color', 'Suitable For', 'About Product']
+    details = []
+    for i, field in enumerate(fields):
+        start = desc.find(field + " : ")
+        if start != -1:
+            start += len(field) + 3
+            # find the next field start
+            next_starts = [desc.find(f + " : ", start) for f in fields[i+1:] if desc.find(f + " : ", start) != -1]
+            end = min(next_starts) if next_starts else len(desc)
+            value = desc[start:end].strip()
+            details.append((field, value))
+    return details
 
 @app.route('/search', methods=['POST'])
 def search_form_post():
@@ -133,8 +151,6 @@ def search_form_post():
     
     # Store query_id in session for click tracking
     session['last_query_id'] = query_id
-
-    print(session)
 
     return render_template(
         'results.html', 
@@ -199,7 +215,18 @@ def doc_details():
     # Store click timestamp for dwell time tracking
     session[f'click_time_{clicked_doc_id}'] = datetime.now().isoformat()
     
-    return render_template('doc_details.html', doc=doc, page_title=doc.title)
+    doc_details_list = []
+    for field in ['Brand name', 'Color', 'Suitable For', 'About Product']:
+        start = doc.description.find(field + " : ")
+        if start != -1:
+            start += len(field) + 3
+            end = min([doc.description.find(next_field + " : ", start) 
+                    for next_field in ['Brand name', 'Color', 'Suitable For', 'About Product'] 
+                    if doc.description.find(next_field + " : ", start) != -1] + [len(doc.description)])
+            value = doc.description[start:end].strip()
+            doc_details_list.append((field, value))
+
+    return render_template('doc_details.html', doc=doc, page_title=doc.title, doc_details_list=doc_details_list)
 
 
 @app.route('/stats', methods=['GET'])

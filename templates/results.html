@@ -1,32 +1,37 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
 {% block page_title %}Search Results{% endblock %}
 
 {% block content %}
-    <h3>Found <strong>{{ found_counter }}</strong> results for "{{ search_query }}" (Algorithm: {{ algorithm }})</h3>
-    <hr>
+<h3>Found <strong>{{ found_counter }}</strong> results for "{{ search_query }}" (Algorithm: {{ algorithm }})</h3>
+<hr>
 
-    {% if rag_response %}
-    <div class="mb-4 p-3" style="border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
-        <h5>AI-Generated Summary:</h5>
-        <p>{{ rag_response }}</p>
-    </div>
-    <hr>
-    {% endif %}
+{% if rag_response %}
+<div class="mb-4 p-3" style="border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
+    <h5>AI-Generated Summary:</h5>
+    <p>{{ rag_response }}</p>
+</div>
+<hr>
+{% endif %}
 
+<div class="results-list">
     {% for item in results_list %}
-    <div class="pb-3">
-        <div class="doc-title">
-            <a href="{{ item.url }}">{{ item.title }}</a>
-        </div>
-        <div class="doc-desc">
-            {% if item.description %}{{ item.description }}<br>{% endif %}
-            {% if item.selling_price %}Price: {{ item.selling_price }} {% endif %}
-            {% if item.discount %} | Discount: {{ item.discount }} {% endif %}
-            {% if item.average_rating %} | Rating: {{ item.average_rating }}{% endif %}
+    <div class="card mb-3" style="padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+        <h5 class="doc-title">
+            <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
+        </h5>
+        <p class="doc-desc">
+            {% if item.description %}{{ item.description }}{% endif %}
+        </p>
+
+        <div class="doc-meta">
+            {% if item.selling_price %}<span><strong>Price:</strong> {{ item.selling_price }}</span>{% endif %}
+            {% if item.discount %} | <span><strong>Discount:</strong> {{ item.discount }}</span>{% endif %}
+            {% if item.average_rating %} | <span><strong>Rating:</strong> {{ item.average_rating }}/5</span>{% endif %}
+            {% if item.category %} | <span><strong>Category:</strong> {{ item.category }}</span>{% endif %}
         </div>
     </div>
-    <hr>
     {% endfor %}
+</div>
 
-    <a href="/" class="btn btn-secondary mt-3">Back to Search</a>
+<a href="/" class="btn btn-secondary mt-3">Back to Search</a>
 {% endblock %}
