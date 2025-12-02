@@ -44,8 +44,12 @@ print("First element:\n", list(corpus.values())[0])
 search_engine = SearchEngine(corpus)
 # instantiate our in memory persistence
 analytics_data = AnalyticsData()
+
 # instantiate RAG generator
-rag_generator = RAGGenerator()
+rag_generator = RAGGenerator(
+    api_key=os.getenv("GROQ_API_KEY"),  # still positional if needed
+    model_name=os.getenv("GROQ_MODEL")  # this is now correct
+)
 
 
 @app.before_request

@@ -1,0 +1,11 @@
+<form action="/search" method="post" class="form-inline mb-4">
+    <input type="text" name="search-query" class="form-control mr-2" placeholder="Enter your search..." required>
+    
+    <select name="algorithm" class="form-control mr-2">
+        <option value="tfidf">TF-IDF</option>
+        <option value="bm25">BM25</option>
+        <option value="custom">Custom Score</option>
+    </select>
+    
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>

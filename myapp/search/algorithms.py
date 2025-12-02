@@ -52,6 +52,55 @@ class SearchAlgorithms:
         self.avgdl = sum(self.doc_lengths) / len(self.doc_lengths)
         self.N = len(self.documents)
     
+    def custom_score(self, query_terms: List[str], doc_pid: str) -> float:
+        """
+        Custom scoring function combining:
+        - term frequency
+        - IDF weighting
+        - field-specific boosts
+        - mild length normalization (BM25-inspired)
+        """
+        doc = self.corpus[doc_pid]
+
+        # Extract fields
+        title = (doc.title or "").lower()
+        description = (doc.description or "").lower()
+        category = (doc.category or "").lower()
+        subcat = (doc.sub_category or "").lower()
+        brand = (doc.brand or "").lower()
+
+        # Field boosts
+        BOOST_TITLE = 3.0
+        BOOST_BRAND = 2.0
+        BOOST_CATEGORY = 1.5
+        BOOST_SUBCAT = 1.3
+        BOOST_DESCRIPTION = 1.0
+
+        # Length normalization (BM25-like)
+        length = len((title + " " + description).split())
+        norm = 1.0 / (1.0 + (length / (self.avgdl + 1e-9)))
+
+        score = 0.0
+
+        for term in query_terms:
+            
+            # IDF if term exists in vocab, else fallback
+            if term in self.tfidf_vectorizer.vocabulary_:
+                term_id = self.tfidf_vectorizer.vocabulary_[term]
+                idf = self.tfidf_vectorizer.idf_[term_id]
+            else:
+                idf = 1.0
+
+            # Field-specific term matching (simple TF)
+            score += BOOST_TITLE      * title.count(term)       * idf
+            score += BOOST_BRAND      * brand.count(term)       * idf
+            score += BOOST_CATEGORY   * category.count(term)    * idf
+            score += BOOST_SUBCAT     * subcat.count(term)      * idf
+            score += BOOST_DESCRIPTION * description.count(term) * idf
+
+        return score * norm
+
+
     def search_tfidf(self, query: str, top_k: int = 20) -> List[Tuple[str, float]]:
         """
         Search using TF-IDF + Cosine Similarity.
@@ -139,6 +188,20 @@ class SearchAlgorithms:
         
         return results
 
+    def search_custom(self, query: str, top_k: int = 20) -> List[Tuple[str, float]]:
+        if not query or not query.strip():
+            return []
+    
+        query_terms = query.lower().split()
+        scores = np.zeros(self.N)
+        
+        for idx, pid in enumerate(self.doc_ids):
+            scores[idx] = self.custom_score(query_terms, pid)
+        
+        top_indices = np.argsort(scores)[::-1][:top_k]
+        results = [(self.doc_ids[idx], float(scores[idx])) for idx in top_indices if scores[idx] > 0]
+        
+        return results
 
 def search_in_corpus(query: str, corpus: Dict[str, Document], algorithm: str = "tfidf", top_k: int = 20) -> List[ResultItem]:
     """
@@ -162,7 +225,9 @@ def search_in_corpus(query: str, corpus: Dict[str, Document], algorithm: str = "
     # Execute search based on algorithm
     if algorithm.lower() == "bm25":
         ranked_results = search_algo.search_bm25(query, top_k)
-    else:  # default to tfidf
+    elif algorithm.lower() == "custom":
+        ranked_results = search_algo.search_custom(query, top_k)
+    elif  algorithm.lower() == "tfidf":
         ranked_results = search_algo.search_tfidf(query, top_k)
     
     # Convert to ResultItem objects
