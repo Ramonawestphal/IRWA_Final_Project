@@ -1,31 +1,43 @@
 {% extends "base.html" %}
 {% block page_title %}{{ page_title }}{% endblock %}
 
-{% block header %}
-    <!-- Next tag loads Charts.js https://www.chartjs.org/docs/latest/ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.6.2/chart.min.js"
-            integrity="sha512-tMabqarPtykgDtdtSqCL3uLVM0gS1ZkUAVhRFu1vSEFgvB73niFQWJuvviDyBGBH22Lcau4rHB5p2K2T0Xvr6Q=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-{% endblock %}
-
 {% block content %}
 
-    <!--
-    Examples of what to show in Dashboard:
+<h2>Analytics Dashboard</h2>
 
-    - Ranking of visited documents (from results page)
-    - Visitor's preferred browsers
-    - Visitor's city (from IP)
-    - preferred queries ranking
-    - preferred terms
-    - etc.
+<!-- ------------------------------ -->
+<!-- METRICS OVERVIEW -->
+<!-- ------------------------------ -->
+<h3>Key Metrics</h3>
 
-    -->
+<ul>
+    <li><strong>Total Sessions:</strong> {{ stats.overview.total_sessions }}</li>
+    <li><strong>Total Queries:</strong> {{ stats.overview.total_queries }}</li>
+    <li><strong>Total Clicks:</strong> {{ stats.overview.total_clicks }}</li>
+    <li><strong>Average Queries per Session:</strong> {{ stats.overview.avg_queries_per_session }}</li>
+    <li><strong>Click-Through Rate:</strong> {{ stats.overview.click_through_rate }}%</li>
+    <li><strong>Unique Documents Clicked:</strong> {{ stats.overview.unique_documents_clicked }}</li>
+</ul>
 
-    <h3>Dashboard</h3>
-    <iframe src="/plot_number_of_views" width="600" height="400" style="border: none;"></iframe>
+<hr>
 
+<!-- ------------------------------ -->
+<!-- CHARTS -->
+<!-- ------------------------------ -->
+<h3>Views per Document</h3>
+<p>This chart shows which documents are most popular (clicked the most).</p>
+<iframe src="/plot_number_of_views" width="650" height="450" style="border:none;"></iframe>
+
+<h3>Queries Over Time</h3>
+<p>This line chart shows how many searches were made each day.</p>
+<iframe src="/plot_queries_over_time" width="650" height="350" style="border:none;"></iframe>
+
+<h3>Click Distribution by Rank</h3>
+<p>The rank where users clicked — tells you how effective ranking is.</p>
+<iframe src="/plot_click_distribution" width="650" height="350" style="border:none;"></iframe>
+
+<h3>Device Type Distribution</h3>
+<p>Shows % of mobile vs desktop visitors.</p>
+<iframe src="/plot_device_distribution" width="450" height="450" style="border:none;"></iframe>
 
 {% endblock %}
-
-
