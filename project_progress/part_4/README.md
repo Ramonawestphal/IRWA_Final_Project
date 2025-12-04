@@ -33,7 +33,8 @@ project/
 ├── analytics.py                # Analytics tracking
 ├── requirements.txt            # Python dependencies
 ├── data/
-│   └── fashion_products_dataset.json
+│   └── raw/
+│       └──fashion_products_dataset.json
 ├── templates/
 │   ├── base.html              # Base template
 │   ├── index.html             # Search page
@@ -54,12 +55,13 @@ pip install -r requirements.txt
 
 ### 2. Prepare Data
 
-Place your `fashion_products_dataset.json` file in the `data/` directory:
+Place your `fashion_products_dataset.json` file in the `data/raw` directory:
 
 ```
 project/
 ├── data/
-│   └── fashion_products_dataset.json
+│   └── raw/
+│       └──fashion_products_dataset.json
 ```
 
 ### 3. Run the Application

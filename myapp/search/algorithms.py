@@ -76,7 +76,7 @@ class SearchAlgorithms:
         BOOST_SUBCAT = 1.3
         BOOST_DESCRIPTION = 1.0
 
-        # Length normalization (BM25-like)
+        # Length normalization 
         length = len((title + " " + description).split())
         norm = 1.0 / (1.0 + (length / (self.avgdl + 1e-9)))
 
